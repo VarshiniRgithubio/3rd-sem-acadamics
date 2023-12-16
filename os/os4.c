@@ -1,35 +1,54 @@
-#include<stdio.h> 
-void main()
-{
-int buffer[10], bufsize, in, out, produce, consume, 
-choice=0; in = 0;
-out = 0;
-bufsize = 10;
-while(choice !=3)
-{
-printf("\n1. Produce \t 2. Consume \t3. Exit"); 
-printf("\nEnter your choice: ");
-scanf("%d",&choice); 
-switch(choice) {
-case 1: if((in+1)%bufsize==out)
-printf("\nBuffer is Full");
-else
-{
-printf("\nEnter the value: ");
-scanf("%d", &produce); 
-buffer[in] = produce;
-in = (in+1)%bufsize;
-}
-break;
+#include <stdlib.h>
+#include <fcntl.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
-case 2: if(in == out)
-printf("\nBuffer is Empty");
-else
-{
-consume = buffer[out];
-printf("\nThe consumed value is %d", consume); 
-out = (out+1)%bufsize;
-}
-break;
-} } 
+#define FIFO_FILE "myfifo"
+
+int main() {
+    // Create a FIFO (named pipe)
+    mkfifo(FIFO_FILE, S_IRUSR | S_IWUSR);
+
+    // Writer Process
+    if (fork() == 0) {
+        int fd = open(FIFO_FILE, O_WRONLY);
+        if (fd == -1) {
+            perror("open");
+            exit(EXIT_FAILURE);
+        }
+
+        // Write data to the FIFO
+        char message[] = "Hello from the writer process!";
+        write(fd, message, sizeof(message));
+
+        // Close the file descriptor
+        close(fd);
+
+        exit(EXIT_SUCCESS);
+    }
+
+    // Reader Process
+    else {
+        int fd = open(FIFO_FILE, 
+        if (fd == -1) {
+            perror("open");
+            exit(EXIT_FAILURE);
+        }
+
+        // Read data from the FIFO
+        char buffer[100];
+        read(fd, buffer, sizeof(buffer));
+        printf("Reader Process: Received message - %s\n", buffer);
+
+        // Close the file descriptor
+        close(fd);
+
+        // Remove the FIFO
+        unlink(FIFO_FILE);
+
+        exit(EXIT_SUCCESS);
+    }
+
+    return 0;
 }
